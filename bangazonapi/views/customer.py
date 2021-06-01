@@ -42,3 +42,5 @@ class Customers(ViewSet):
         customer.save()
 
         return Response({}, status=status.HTTP_204_NO_CONTENT)
+
+        
