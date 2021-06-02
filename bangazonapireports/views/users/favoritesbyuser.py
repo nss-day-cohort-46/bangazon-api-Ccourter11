@@ -11,15 +11,22 @@ def userfavorite_list(request):
 
             db_cursor.execute("""
                 SELECT 
-                    c.id,
+                    c.id AS customer_id,
                     c.phone_number,
                     c.address,
                     u.id user_id,
-                    u.first_name || ' ' || u.last_name AS full_name
-                FROM
+                    u.first_name || ' ' || u.last_name AS customer_name,
+                    su.first_name || ' ' || su.last_name AS seller_name
+                FROM 
                     bangazonapi_customer c
+                LEFT JOIN
+                    bangazonapi_favorite f ON f.customer_id = c.id
                 JOIN
                     auth_user u ON c.user_id = u.id
+                LEFT JOIN
+                    bangazonapi_customer sc ON f.seller_id = sc.id
+                LEFT JOIN
+                    auth_user su ON sc.user_id = su.id    
                """)
 
             dataset = db_cursor.fetchall()
@@ -28,9 +35,8 @@ def userfavorite_list(request):
 
             for row in dataset:
                 seller = Customer()
-                seller.phone_number = row["phone_number"]
-                seller.address = row["address"]
-                uid = row["user_id"]
+                seller.seller_name = row["seller_name"]
+                uid = row["customer_id"]
 
                 if uid in favorites_by_user:
                     favorites_by_user[uid]["sellers"].append(seller)
@@ -38,7 +44,7 @@ def userfavorite_list(request):
                 else:
                     favorites_by_user[uid] = {}  
                     favorites_by_user[uid]["id"] = uid    
-                    favorites_by_user[uid]["full_name"] = row["full_name"]
+                    favorites_by_user[uid]["customer_name"] = row["customer_name"]
                     favorites_by_user[uid]["sellers"] = [seller]
 
         list_of_user_favorites = favorites_by_user.values()      
